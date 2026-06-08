@@ -20462,7 +20462,7 @@ const POKEMON_DATA = {
     },
     {
       "id": 386,
-      "name": "DeoxysNormal",
+      "name": "Deoxys",
       "abilities": [
         "Pressure"
       ],
