@@ -57662,7 +57662,7 @@ const POKEMON_DATA = {
     },
     {
       "id": 648,
-      "name": "MeloettaAria",
+      "name": "Meloetta",
       "abilities": [
         "Serene Grace"
       ],
@@ -82102,7 +82102,7 @@ const POKEMON_DATA = {
     },
     {
       "id": 492,
-      "name": "ShayminLand",
+      "name": "Shaymin",
       "abilities": [
         "Natural Cure"
       ],

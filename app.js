@@ -12,6 +12,7 @@ SeededRandom.prototype.random = function() {
 };
 
 const TERA_TYPES = ['Normal', 'Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Dark', 'Steel', 'Fairy'];
+const TEAM_HISTORY_KEY = 'showdownTeamGeneratorHistory';
 
 function normalizeSpriteName(name) {
     return String(name || '')
@@ -89,6 +90,23 @@ document.getElementById('copyToClipboardBtn').addEventListener('click', function
     document.execCommand('copy');
     alert('Team copied to clipboard!');
 });
+
+// Team history selector
+const historySelect = document.getElementById('teamHistorySelect');
+if (historySelect) {
+    historySelect.addEventListener('change', function() {
+        if (this.value !== '') {
+            loadTeamFromHistory(this.value);
+        }
+    });
+}
+
+const clearHistoryButton = document.getElementById('clearHistoryBtn');
+if (clearHistoryButton) {
+    clearHistoryButton.addEventListener('click', function() {
+        clearTeamHistory();
+    });
+}
 
 function getFilterCriteria() {
     return {
@@ -262,9 +280,89 @@ function generateTeam() {
 
     currentTeam = team;
     displayTeam(team);
+    saveTeamHistory(team);
+    populateTeamHistoryDropdown();
 }
 
-function displayTeam(team) {
+function getSavedTeamHistory() {
+    try {
+        const raw = localStorage.getItem(TEAM_HISTORY_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+        console.warn('Failed to load team history from localStorage', error);
+        return [];
+    }
+}
+
+function saveTeamHistory(team) {
+    if (!Array.isArray(team) || team.length === 0) return;
+
+    try {
+        const history = getSavedTeamHistory();
+        const savedTeam = team.map(member => ({ ...member }));
+        history.push({ date: new Date().toISOString(), team: savedTeam });
+        if (history.length > 20) {
+            history.splice(0, history.length - 20);
+        }
+            localStorage.setItem(TEAM_HISTORY_KEY, JSON.stringify(history));
+        populateTeamHistoryDropdown();
+    } catch (error) {
+        console.warn('Failed to save team history to localStorage', error);
+    }
+}
+
+function clearTeamHistory() {
+    try {
+        localStorage.removeItem(TEAM_HISTORY_KEY);
+        populateTeamHistoryDropdown();
+        alert('Team history cleared.');
+    } catch (error) {
+        console.warn('Failed to clear team history', error);
+    }
+}
+
+function populateTeamHistoryDropdown() {
+    const select = document.getElementById('teamHistorySelect');
+    if (!select) return;
+
+    const history = getSavedTeamHistory();
+    select.innerHTML = '<option value="">Load saved team</option>';
+
+    for (let i = history.length - 1; i >= 0; i--) {
+        const entry = history[i];
+        const date = entry.date ? new Date(entry.date).toLocaleString() : `Saved team ${history.length - i}`;
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = `${date}`;
+        select.appendChild(opt);
+    }
+}
+
+function loadTeamFromHistory(index) {
+    const history = getSavedTeamHistory();
+    const historyIndex = parseInt(index, 10);
+    if (Number.isNaN(historyIndex) || historyIndex < 0 || historyIndex >= history.length) return;
+
+    const entry = history[historyIndex];
+    if (!entry || !Array.isArray(entry.team)) return;
+
+    currentTeam = entry.team;
+    displayTeam(currentTeam, false);
+}
+
+function loadLastSavedTeam() {
+    const history = getSavedTeamHistory();
+    if (history.length === 0) return false;
+
+    const lastEntry = history[history.length - 1];
+    if (!lastEntry || !Array.isArray(lastEntry.team)) return false;
+
+    currentTeam = lastEntry.team;
+    displayTeam(currentTeam, false);
+    return true;
+}
+
+function displayTeam(team, saveHistory = true) {
     const teamDisplay = document.getElementById('teamDisplay');
 
     if (team.length === 0) {
@@ -526,6 +624,11 @@ function regeneratePokemon(index) {
 
     displayTeam(currentTeam);
 }
+
+window.addEventListener('load', function() {
+    populateTeamHistoryDropdown();
+    loadLastSavedTeam();
+});
 
 function exportTeam() {
     if (currentTeam.length === 0) return;
