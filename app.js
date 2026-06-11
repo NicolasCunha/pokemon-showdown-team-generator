@@ -147,6 +147,7 @@ function getFilterCriteria() {
         includeMythicals: document.getElementById('includeMythicals').checked,
         mythicalsCount: parseInt(document.getElementById('mythicalsCount').value),
         onlyFullyEvolved: document.getElementById('onlyFullyEvolved').checked,
+        allowDuplicates: document.getElementById('allowDuplicates').checked,
         includeEVSpread: document.getElementById('includeEVSpread').checked,
         includeNature: document.getElementById('includeNature').checked
     };
@@ -277,9 +278,17 @@ function generateTeam() {
     const team = [];
     let legendaryCount = 0;
     let mythicalCount = 0;
+    const usedIds = new Set();
+
+    const availablePool = (pool) => criteria.allowDuplicates ? pool : pool.filter(p => !usedIds.has(p.id));
+    const pickAndTrack = (pool) => {
+        const p = getRandomElement(pool, random);
+        if (p && !criteria.allowDuplicates) usedIds.add(p.id);
+        return p;
+    };
 
     if (criteria.includeMega) {
-        const megaPokemon = getRandomElement(megaCandidates, random);
+        const megaPokemon = pickAndTrack(megaCandidates);
         team.push(createTeamMember(megaPokemon, criteria, random, true));
         if (megaPokemon.isLegendary) legendaryCount++;
         if (megaPokemon.isMythical) mythicalCount++;
@@ -289,21 +298,26 @@ function generateTeam() {
         let selectedPokemon = null;
 
         if (criteria.includeLegendaries && legendaryCount < criteria.legendariesCount) {
-            const legendaries = filtered.filter(p => p.isLegendary);
+            const legendaries = availablePool(filtered.filter(p => p.isLegendary));
             if (legendaries.length > 0) {
-                selectedPokemon = getRandomElement(legendaries, random);
+                selectedPokemon = pickAndTrack(legendaries);
                 legendaryCount++;
             }
         } else if (criteria.includeMythicals && mythicalCount < criteria.mythicalsCount) {
-            const mythicals = filtered.filter(p => p.isMythical);
+            const mythicals = availablePool(filtered.filter(p => p.isMythical));
             if (mythicals.length > 0) {
-                selectedPokemon = getRandomElement(mythicals, random);
+                selectedPokemon = pickAndTrack(mythicals);
                 mythicalCount++;
             }
         }
 
         if (!selectedPokemon) {
-            selectedPokemon = getRandomElement(filtered, random);
+            const pool = availablePool(filtered);
+            if (pool.length === 0) {
+                alert('Not enough unique Pokemon match your criteria to fill the team. Enable "Allow duplicates" or adjust your filters.');
+                return;
+            }
+            selectedPokemon = pickAndTrack(pool);
         }
 
         team.push(createTeamMember(selectedPokemon, criteria, random, false));
@@ -659,6 +673,10 @@ function regeneratePokemon(index) {
 window.addEventListener('load', function() {
     POKEMON_DATA = normalizePokemonJson(POKEMON_RAW);
     document.getElementById('generateTeamBtn').disabled = false;
+    document.getElementById('legendariesCountContainer').style.display =
+        document.getElementById('includeLegendaries').checked ? 'block' : 'none';
+    document.getElementById('mythicalsCountContainer').style.display =
+        document.getElementById('includeMythicals').checked ? 'block' : 'none';
     populateTeamHistoryDropdown();
     loadLastSavedTeam();
 });
