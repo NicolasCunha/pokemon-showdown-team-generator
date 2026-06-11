@@ -1,6 +1,32 @@
 // Global team variable
 let currentTeam = [];
 let seededRandom = null;
+let POKEMON_DATA = null;
+
+const NATURES = ["Adamant","Bashful","Bold","Brave","Calm","Careful","Docile","Gentle","Hardy","Hasty","Impish","Jolly","Lax","Lonely","Mild","Modest","Naive","Naughty","Quiet","Quirky","Rash","Relaxed","Sassy","Serious","Timid"];
+const ITEMS = ["Absorb Bulb","Air Balloon","Aspear Berry","Babiri Berry","Balm Mushroom","Berry Juice","Big Mushroom","Big Nugget","Big Pearl","Big Root","Black Belt","Black Glasses","Black Sludge","Blue Shard","Bright Powder","Cell Battery","Charcoal","Charti Berry","Cheri Berry","Chesto Berry","Chilan Berry","Chople Berry","Cleanse Tag","Coba Berry","Colbur Berry","Comet Shard","Deep Sea Scale","Deep Sea Tooth","Dragon Fang","Dragon Scale","Electirizer","Electric Seed","Everstone","Expert Belt","Flame Orb","Focus Band","Grassy Seed","Green Shard","Grip Claw","Haban Berry","Hard Stone","Heart Scale","Honey","Iron Ball","Kasib Berry","Kebia Berry","King's Rock","Lagging Tail","Leek","Leftovers","Leppa Berry","Life Orb","Light Ball","Light Clay","Lucky Egg","Lucky Punch","Lum Berry","Luminous Moss","Magmarizer","Magnet","Max Revive","Mental Herb","Metal Coat","Metal Powder","Metronome","Miracle Seed","Misty Seed","Moomoo Milk","Moon Stone","Mystic Water","Never-Melt Ice","Nugget","Occa Berry","Oran Berry","Oval Stone","Passho Berry","Payapa Berry","Pearl","Pecha Berry","Persim Berry","Poison Barb","Potion","Power Herb","Pretty Feather","Psychic Seed","Quick Claw","Quick Powder","Rare Bone","Rawst Berry","Razor Claw","Razor Fang","Red Shard","Revive","Rindo Berry","Sacred Ash","Sharp Beak","Shed Shell","Shuca Berry","Silk Scarf","Silver Powder","Sitrus Berry","Smoke Ball","Snowball","Soft Sand","Spell Tag","Star Piece","Stardust","Sticky Barb","Sun Stone","Tanga Berry","Thick Club","Tiny Mushroom","Toxic Orb","Twisted Spoon","Upgrade","Wacan Berry","Wide Lens","Yache Berry","Yellow Shard"];
+
+function titleCase(str) {
+    return str.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function normalizePokemonJson(json) {
+    const pokemon = json.pokemons.map(p => ({
+        id: p.pokedexNumber,
+        name: titleCase(p.name),
+        abilities: p.abilities.map(titleCase),
+        moves: p.moves.map(titleCase),
+        types: p.types.map(titleCase),
+        isLegendary: p.legendary,
+        isMythical: p.mythical,
+        fullyEvolved: p.fullyEvolved,
+        megaStones: p.megaEvolutions.map(me => titleCase(me.item)),
+        region: p.region,
+        baseStats: p.baseStats || null,
+        items: []
+    }));
+    return { pokemon, items: ITEMS, natures: NATURES };
+}
 
 // Seeded random number generator
 function SeededRandom(seed) {
@@ -120,6 +146,7 @@ function getFilterCriteria() {
         legendariesCount: parseInt(document.getElementById('legendariesCount').value),
         includeMythicals: document.getElementById('includeMythicals').checked,
         mythicalsCount: parseInt(document.getElementById('mythicalsCount').value),
+        onlyFullyEvolved: document.getElementById('onlyFullyEvolved').checked,
         includeEVSpread: document.getElementById('includeEVSpread').checked,
         includeNature: document.getElementById('includeNature').checked
     };
@@ -196,6 +223,10 @@ function filterPokemon(criteria) {
 
     let filtered = POKEMON_DATA.pokemon.filter(p => {
         if (criteria.regions.length > 0 && !criteria.regions.includes(p.region)) {
+            return false;
+        }
+
+        if (criteria.onlyFullyEvolved && !p.fullyEvolved) {
             return false;
         }
 
@@ -626,6 +657,8 @@ function regeneratePokemon(index) {
 }
 
 window.addEventListener('load', function() {
+    POKEMON_DATA = normalizePokemonJson(POKEMON_RAW);
+    document.getElementById('generateTeamBtn').disabled = false;
     populateTeamHistoryDropdown();
     loadLastSavedTeam();
 });

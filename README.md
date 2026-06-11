@@ -1,10 +1,10 @@
-﻿# Pokemon Showdown Team Generator
+# Pokemon Showdown Team Generator
 
 Simple app to generate random Pokémon Showdown teams with support for items, mega stones, abilities, moves, EVs, natures and browser history.
 
 ## Features
 
-- Random team generation using the data in [pokemon.js](./pokemon.js)
+- Random team generation using the data in [pokemon-data.js](./pokemon-data.js)
 - Region filters for Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, Hisui and Paldea
 - Mega Evolution support with exactly one team member holding a mega stone when enabled
 - Legendary and mythical inclusion toggles with configurable counts
@@ -19,19 +19,19 @@ Simple app to generate random Pokémon Showdown teams with support for items, me
 
 ## Data Source
 
-`pokemon.js` contains the dataset used by the app, including:
+`pokemon-data.js` contains the dataset used by the app, including:
 
 - Pokémon name and types
 - Abilities
 - Moves
-- Held items
-- Mega stones
+- Mega evolutions and their required items
 - Legendary/mythical status
 - Region
-- Base stats
+- Evolution chain info
 
 ## How It Works
 
+- On page load, `pokemon-data.js` is loaded as a script and its data is normalized for use.
 - The app filters available Pokémon based on selected criteria.
 - When mega evolution is enabled, one random mega-capable Pokémon is selected and given a mega stone.
 - Other team members receive a regular held item from the available item pool.
@@ -42,12 +42,13 @@ Simple app to generate random Pokémon Showdown teams with support for items, me
 
 ## Usage
 
-1. Open `index.html` in your browser.
-2. Choose desired criteria and click **Generate Team**.
-3. Use **Regenerate Team** to create a new team with the same criteria.
-4. Use the card-level **Regenerate** buttons to reroll one Pokémon.
-5. Edit any dropdowns or values directly in the displayed team.
-6. Click **Export Team** to copy the team text for Pokémon Showdown.
+The app works by opening `index.html` directly in a browser — no server required.
+
+1. Choose desired criteria and click **Generate Team**.
+2. Use **Regenerate Team** to create a new team with the same criteria.
+3. Use the card-level **Regenerate** buttons to reroll one Pokémon.
+4. Edit any dropdowns or values directly in the displayed team.
+5. Click **Export Team** to copy the team text for Pokémon Showdown.
 
 ## Notes
 
